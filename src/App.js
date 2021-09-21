@@ -1,21 +1,51 @@
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
 import { getContacts } from "./apis/getContacts";
 import "./App.css";
-import { ContactContext } from "./context";
+import { ContactContext } from "./contexts/ContactContext";
 
 import SearchContacts from "./pages/SearchContacts";
 
+const initialState = {
+  loading: false,
+  error: null,
+  contacts: [],
+};
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "SUCCESS":
+      return {
+        loading: true,
+        error: null,
+        contacts: action.payload,
+      };
+    case "FAILURE":
+      return {
+        loading: true,
+        error: "Something went wrong",
+        contacts: [],
+      };
+    default:
+      return state;
+  }
+};
+
 const App = () => {
-  const [contacts, setContacts] = useState([]);
+  const [contactsState, dispatchContactState] = useReducer(
+    reducer,
+    initialState
+  );
 
   useEffect(() => {
-    getContacts().then((_contacts) => {
-      setContacts(_contacts);
-    });
+    getContacts()
+      .then((_contacts) => {
+        dispatchContactState({ type: "SUCCESS", payload: _contacts });
+      })
+      .catch(() => dispatchContactState({ type: "FAILURE" }));
   }, []);
 
   const contactApi = {
-    contacts,
+    contactsState,
   };
 
   return (
